@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px;}
+        .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .card { background: white; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-logout { background: #f44336; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 id="welcomeText">Cargando...</h2>
+        <button class="btn-logout" id="logoutBtn">Cerrar Sesión</button>
+    </div>
+    
+    <div class="card" id="dashboardContent">
+        <h3>Resumen de Actividad</h3>
+        <p id="statsText">Cargando datos del rol...</p>
+    </div>
+
+    <script type="module">
+        const token = localStorage.getItem('token');
+        if(!token) window.location.href = '/';
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+        async function loadData() {
+            try {
+                const userRes = await fetch('http://localhost:8000/users/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const user = await userRes.json();
+                document.getElementById('welcomeText').innerText = `Bienvenido, ${user.nombre} (Rol: ${user.rol.toUpperCase()})`;
+
+                const dashRes = await fetch('http://localhost:8000/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const dash = await dashRes.json();
+                
+                // Mostrar datos diferentes según el rol
+                document.getElementById('statsText').innerHTML = `<strong>Métricas principales:</strong> <br><br> ${dash.stats}`;
+                
+            } catch(e) {
+                console.error(e);
+            }
+        }
+        loadData();
+    </script>
+</body>
+</html>
